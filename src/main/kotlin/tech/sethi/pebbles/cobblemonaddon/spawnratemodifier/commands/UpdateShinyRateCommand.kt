@@ -1,4 +1,4 @@
-package tech.sethi.pebbles.cobblemonaddon.spawnratemodifier
+package tech.sethi.pebbles.cobblemonaddon.spawnratemodifier.commands
 
 import com.cobblemon.mod.common.Cobblemon
 import com.mojang.brigadier.CommandDispatcher
