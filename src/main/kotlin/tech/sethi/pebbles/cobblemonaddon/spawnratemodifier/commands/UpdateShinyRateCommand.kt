@@ -22,8 +22,10 @@ object UpdateShinyRateCommand {
                 .then(CommandManager.argument("duration", FloatArgumentType.floatArg(0f)).executes { context ->
                     if (shinyRateEndTime != null) {
                         context.source.sendFeedback(
-                            Text.literal("Cannot set a new shiny rate while the current boost is active.")
-                                .formatted(Formatting.RED), true
+                            {
+                                Text.literal("Cannot set a new shiny rate while the current boost is active.")
+                                    .formatted(Formatting.RED)
+                            }, true
                         )
                         return@executes 0
                     }
@@ -35,15 +37,19 @@ object UpdateShinyRateCommand {
 
                     if (duration == 0f) {
                         context.source.sendFeedback(
-                            Text.literal("Shiny rate updated to $rate").formatted(
-                                Formatting.GREEN
-                            ), true
+                            {
+                                Text.literal("Shiny rate updated to $rate").formatted(
+                                    Formatting.GREEN
+                                )
+                            }, true
                         )
                     } else {
                         context.source.sendFeedback(
-                            Text.literal("Shiny rate updated to $rate for $duration minutes").formatted(
-                                Formatting.GREEN
-                            ), true
+                            {
+                                Text.literal("Shiny rate updated to $rate for $duration minutes").formatted(
+                                    Formatting.GREEN
+                                )
+                            }, true
                         )
                         val server = context.source.server
                         server.sendMessage(
@@ -76,9 +82,11 @@ object UpdateShinyRateCommand {
                     val rate = FloatArgumentType.getFloat(context, "rate")
                     Cobblemon.config.shinyRate = rate
                     context.source.sendFeedback(
-                        Text.literal("Shiny rate updated to $rate").formatted(
-                            Formatting.GREEN
-                        ), true
+                        {
+                            Text.literal("Shiny rate updated to $rate").formatted(
+                                Formatting.GREEN
+                            )
+                        }, true
                     )
                     1
                 }))
@@ -87,7 +95,7 @@ object UpdateShinyRateCommand {
             .then(CommandManager.argument("duration", FloatArgumentType.floatArg(0f)).executes { context ->
                 if (shinyRateEndTime == null) {
                     context.source.sendFeedback(
-                        Text.literal("There's no active shiny rate boost to extend.").formatted(Formatting.RED), false
+                        { Text.literal("There's no active shiny rate boost to extend.").formatted(Formatting.RED) }, false
                     )
                     return@executes 0
                 }
@@ -104,9 +112,11 @@ object UpdateShinyRateCommand {
                 }
 
                 context.source.sendFeedback(
-                    Text.literal("Shiny rate boost extended by $duration minutes").formatted(
-                        Formatting.GREEN
-                    ), true
+                    {
+                        Text.literal("Shiny rate boost extended by $duration minutes").formatted(
+                            Formatting.GREEN
+                        )
+                    }, true
                 )
                 1
             }))
@@ -127,14 +137,16 @@ object UpdateShinyRateCommand {
 
                 if (remainingTime == 0L) {
                     context.source.sendFeedback(
-                        Text.literal("Current shiny rate: $shinyRate").formatted(Formatting.YELLOW), true
+                        { Text.literal("Current shiny rate: $shinyRate").formatted(Formatting.YELLOW) }, true
                     )
                 } else {
                     context.source.sendFeedback(
-                        Text.literal("Current shiny rate: $shinyRate for $remainingTime minutes $remaingSeconds seconds")
-                            .formatted(
-                                Formatting.YELLOW
-                            ), true
+                        {
+                            Text.literal("Current shiny rate: $shinyRate for $remainingTime minutes $remaingSeconds seconds")
+                                .formatted(
+                                    Formatting.YELLOW
+                                )
+                        }, true
                     )
                 }
 
@@ -147,7 +159,7 @@ object UpdateShinyRateCommand {
                 Cobblemon.config.shinyRate = 8192f
                 shinyRateEndTime = null
                 context.source.sendFeedback(
-                    Text.literal("Shiny rate reset to default").formatted(Formatting.GREEN), true
+                    { Text.literal("Shiny rate reset to default").formatted(Formatting.GREEN) }, true
                 )
                 1
             })

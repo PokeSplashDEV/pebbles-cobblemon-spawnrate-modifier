@@ -11,12 +11,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static java.sql.DriverManager.println;
+
 @Mixin(value = PokemonSpawnAction.class, remap = false)
 public abstract class PokemonSpawnActionMixin {
 	@Shadow
 	private PokemonProperties props;
 
-	@Inject(method = "createEntity", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "createEntity", at = @At("HEAD"))
 	private void modifyShinyRate(CallbackInfoReturnable<Entity> cir) {
 		float shinyRate = Cobblemon.config.getShinyRate();
 		if (shinyRate >= 1 && Random.Default.nextFloat() < 1 / shinyRate) {
