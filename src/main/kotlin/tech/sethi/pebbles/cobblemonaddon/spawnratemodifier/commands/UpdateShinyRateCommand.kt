@@ -20,15 +20,15 @@ object UpdateShinyRateCommand {
         dispatcher.register(CommandManager.literal("setshinyrate").requires { it.hasPermissionLevel(2) }
             .then(CommandManager.argument("rate", FloatArgumentType.floatArg(0f))
                 .then(CommandManager.argument("duration", FloatArgumentType.floatArg(0f)).executes { context ->
-                    if (shinyRateEndTime != null) {
-                        context.source.sendFeedback(
-                            {
-                                Text.literal("Cannot set a new shiny rate while the current boost is active.")
-                                    .formatted(Formatting.RED)
-                            }, true
-                        )
-                        return@executes 0
-                    }
+//                    if (shinyRateEndTime != null) {
+//                        context.source.sendFeedback(
+//                            {
+//                                Text.literal("Cannot set a new shiny rate while the current boost is active.")
+//                                    .formatted(Formatting.RED)
+//                            }, true
+//                        )
+//                        return@executes 0
+//                    }
 
                     val rate = FloatArgumentType.getFloat(context, "rate")
                     val duration = FloatArgumentType.getFloat(context, "duration")
@@ -75,6 +75,19 @@ object UpdateShinyRateCommand {
                         delay((duration * 60 * 1000).toLong())
                         Cobblemon.config.shinyRate = 8192f
                         shinyRateEndTime = null
+                        // Broadcast
+                        for (player in context.source.server.playerManager.playerList) {
+                            player.sendMessage(Text.literal("[Booster]").formatted(Formatting.LIGHT_PURPLE)
+                                .append(Text.literal(" The Shiny Boost has ended!")
+                                    .formatted(Formatting.GREEN)))
+                        }
+                    }
+
+                    // Broadcast
+                    for (player in context.source.server.playerManager.playerList) {
+                        player.sendMessage(Text.literal("[Booster]").formatted(Formatting.LIGHT_PURPLE)
+                            .append(Text.literal(" A Shiny Boost has begun for $duration minutes!")
+                                .formatted(Formatting.GREEN)))
                     }
 
                     1
@@ -88,6 +101,7 @@ object UpdateShinyRateCommand {
                             )
                         }, true
                     )
+
                     1
                 }))
 
@@ -121,7 +135,7 @@ object UpdateShinyRateCommand {
                 1
             }))
 
-        dispatcher.register(CommandManager.literal("getshinyrate").requires { it.hasPermissionLevel(2) }
+        dispatcher.register(CommandManager.literal("getshinyrate").requires { it.hasPermissionLevel(0) }
             .executes { context ->
                 val shinyRate = Cobblemon.config.shinyRate
                 val remainingTime = if (shinyRateEndTime != null) {
