@@ -3,37 +3,74 @@ package tech.sethi.pebbles.cobblemonaddon.spawnratemodifier.commands
 import com.cobblemon.mod.common.Cobblemon
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.FloatArgumentType
+import com.mojang.brigadier.context.CommandContext
 import kotlinx.coroutines.*
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import org.pokesplash.legendaryspawns.LegendarySpawns
 import java.time.Duration
 import java.time.Instant
 
 object UpdateShinyRateCommand {
     private var shinyRateEndTime: Instant? = null
     private var shinyRateResetJob: Job? = null
+    private var queue: ArrayList<Pair<Float, Float>>? = arrayListOf()
+
+    private fun createTimer(rate: Float,
+                            duration: Float,
+        context: CommandContext<ServerCommandSource>) {
+
+        LegendarySpawns.announcer.isAnnounceShinies = true;
+
+        Cobblemon.config.shinyRate = rate;
+
+        // Store the end time for the current shiny rate
+        shinyRateEndTime = Instant.now().plus(Duration.ofMinutes(duration.toLong()))
+
+        // Schedule a new timer task to reset the shiny rate after the specified duration
+        shinyRateResetJob = GlobalScope.launch {
+            delay((duration * 60 * 1000).toLong())
+            Cobblemon.config.shinyRate = 8192f
+            shinyRateEndTime = null
+            // Broadcast
+            for (player in context.source.server.playerManager.playerList) {
+                player.sendMessage(Text.literal("[Booster]").formatted(Formatting.LIGHT_PURPLE)
+                    .append(Text.literal(" The Shiny Boost has ended!")
+                        .formatted(Formatting.GREEN)))
+            }
+
+            if (queue!!.size > 0) {
+                val nextRate = queue!![0];
+                createTimer(nextRate.first, nextRate.second, context)
+                queue!!.removeAt(0);
+            }
+
+            LegendarySpawns.announcer.isAnnounceShinies = false;
+        }
+
+        // Broadcast
+        for (player in context.source.server.playerManager.playerList) {
+            player.sendMessage(Text.literal("[Booster]").formatted(Formatting.LIGHT_PURPLE)
+                .append(Text.literal(" A Shiny Boost has begun for $duration minutes!")
+                    .formatted(Formatting.GREEN)))
+        }
+    }
 
     @OptIn(DelicateCoroutinesApi::class)
     fun register(dispatcher: CommandDispatcher<ServerCommandSource>) {
         dispatcher.register(CommandManager.literal("setshinyrate").requires { it.hasPermissionLevel(2) }
             .then(CommandManager.argument("rate", FloatArgumentType.floatArg(0f))
                 .then(CommandManager.argument("duration", FloatArgumentType.floatArg(0f)).executes { context ->
-//                    if (shinyRateEndTime != null) {
-//                        context.source.sendFeedback(
-//                            {
-//                                Text.literal("Cannot set a new shiny rate while the current boost is active.")
-//                                    .formatted(Formatting.RED)
-//                            }, true
-//                        )
-//                        return@executes 0
-//                    }
 
                     val rate = FloatArgumentType.getFloat(context, "rate")
                     val duration = FloatArgumentType.getFloat(context, "duration")
 
-                    Cobblemon.config.shinyRate = rate
+                    if (shinyRateEndTime != null) {
+                        queue?.add(Pair(rate, duration))
+                        return@executes 0
+                    }
 
                     if (duration == 0f) {
                         context.source.sendFeedback(
@@ -67,28 +104,8 @@ object UpdateShinyRateCommand {
                         }
 
                     }
-                    // Store the end time for the current shiny rate
-                    shinyRateEndTime = Instant.now().plus(Duration.ofMinutes(duration.toLong()))
 
-                    // Schedule a new timer task to reset the shiny rate after the specified duration
-                    shinyRateResetJob = GlobalScope.launch {
-                        delay((duration * 60 * 1000).toLong())
-                        Cobblemon.config.shinyRate = 8192f
-                        shinyRateEndTime = null
-                        // Broadcast
-                        for (player in context.source.server.playerManager.playerList) {
-                            player.sendMessage(Text.literal("[Booster]").formatted(Formatting.LIGHT_PURPLE)
-                                .append(Text.literal(" The Shiny Boost has ended!")
-                                    .formatted(Formatting.GREEN)))
-                        }
-                    }
-
-                    // Broadcast
-                    for (player in context.source.server.playerManager.playerList) {
-                        player.sendMessage(Text.literal("[Booster]").formatted(Formatting.LIGHT_PURPLE)
-                            .append(Text.literal(" A Shiny Boost has begun for $duration minutes!")
-                                .formatted(Formatting.GREEN)))
-                    }
+                    createTimer(rate, duration, context)
 
                     1
                 }).executes { context ->

@@ -19,6 +19,10 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+
+    flatDir {
+        dir 'libs'
+    }
 }
 
 loom {
@@ -41,6 +45,8 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
     modImplementation "curse.maven:cobblemon-687131:4797468"
+
+    modImplementation fileTree(dir: 'libs', includes: ['*.jar'])
 }
 
 processResources {
