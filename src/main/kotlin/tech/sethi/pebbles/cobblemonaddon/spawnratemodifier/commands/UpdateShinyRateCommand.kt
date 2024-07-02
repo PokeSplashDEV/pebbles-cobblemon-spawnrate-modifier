@@ -10,17 +10,17 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.pokesplash.legendaryspawns.LegendarySpawns
+import tech.sethi.pebbles.cobblemonaddon.spawnratemodifier.Queue
 import java.time.Duration
 import java.time.Instant
 
 object UpdateShinyRateCommand {
     private var shinyRateEndTime: Instant? = null
     private var shinyRateResetJob: Job? = null
-    private var queue: ArrayList<Pair<Float, Float>>? = arrayListOf()
 
-    private fun createTimer(rate: Float,
+    public fun createTimer(rate: Float,
                             duration: Float,
-        context: CommandContext<ServerCommandSource>) {
+        context: CommandContext<ServerCommandSource>?) {
 
         LegendarySpawns.announcer.isAnnounceShinies = true;
 
@@ -35,26 +35,31 @@ object UpdateShinyRateCommand {
             Cobblemon.config.shinyRate = 8192f
             shinyRateEndTime = null
             // Broadcast
-            for (player in context.source.server.playerManager.playerList) {
-                player.sendMessage(Text.literal("[Booster]").formatted(Formatting.LIGHT_PURPLE)
-                    .append(Text.literal(" The Shiny Boost has ended!")
-                        .formatted(Formatting.GREEN)))
+            if (context != null) {
+                for (player in context.source.server.playerManager.playerList) {
+                    player.sendMessage(Text.literal("[Booster]").formatted(Formatting.LIGHT_PURPLE)
+                        .append(Text.literal(" The Shiny Boost has ended!")
+                            .formatted(Formatting.GREEN)))
+                }
             }
 
-            if (queue!!.size > 0) {
-                val nextRate = queue!![0];
+            val nextRate = Queue.getNext()
+
+            if (nextRate != null) {
                 createTimer(nextRate.first, nextRate.second, context)
-                queue!!.removeAt(0);
+                Queue.remove(nextRate)
+            } else {
+                LegendarySpawns.announcer.isAnnounceShinies = false;
             }
-
-            LegendarySpawns.announcer.isAnnounceShinies = false;
         }
 
         // Broadcast
-        for (player in context.source.server.playerManager.playerList) {
-            player.sendMessage(Text.literal("[Booster]").formatted(Formatting.LIGHT_PURPLE)
-                .append(Text.literal(" A Shiny Boost has begun for $duration minutes!")
-                    .formatted(Formatting.GREEN)))
+        if (context != null) {
+            for (player in context.source.server.playerManager.playerList) {
+                player.sendMessage(Text.literal("[Booster]").formatted(Formatting.LIGHT_PURPLE)
+                    .append(Text.literal(" A Shiny Boost has begun for $duration minutes!")
+                        .formatted(Formatting.GREEN)))
+            }
         }
     }
 
@@ -68,7 +73,7 @@ object UpdateShinyRateCommand {
                     val duration = FloatArgumentType.getFloat(context, "duration")
 
                     if (shinyRateEndTime != null) {
-                        queue?.add(Pair(rate, duration))
+                        Queue.add(Pair(rate, duration))
                         return@executes 0
                     }
 
