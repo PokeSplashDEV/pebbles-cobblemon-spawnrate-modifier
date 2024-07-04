@@ -9,7 +9,6 @@ import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import org.pokesplash.legendaryspawns.LegendarySpawns
 import tech.sethi.pebbles.cobblemonaddon.spawnratemodifier.Queue
 import java.time.Duration
 import java.time.Instant
@@ -21,8 +20,6 @@ object UpdateShinyRateCommand {
     public fun createTimer(rate: Float,
                             duration: Float,
         context: CommandContext<ServerCommandSource>?) {
-
-        LegendarySpawns.announcer.isAnnounceShinies = true;
 
         Cobblemon.config.shinyRate = rate;
 
@@ -49,7 +46,6 @@ object UpdateShinyRateCommand {
                 createTimer(nextRate.first, nextRate.second, context)
                 Queue.remove(nextRate)
             } else {
-                LegendarySpawns.announcer.isAnnounceShinies = false;
             }
         }
 
